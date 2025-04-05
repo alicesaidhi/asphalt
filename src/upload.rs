@@ -47,7 +47,7 @@ pub async fn upload_cloud(
         .to_string();
 
     let get_params = GetAssetOperationParams {
-        api_key,
+        api_key: api_key.clone(),
         operation_id: id,
     };
 
@@ -60,7 +60,7 @@ pub async fn upload_cloud(
                     let id = id_str.parse::<u64>().context("Asset ID wasn't a number")?;
 
                     return match asset.kind {
-                        AssetKind::Decal(_) => get_image_id(client, id).await,
+                        AssetKind::Decal(_) => get_image_id(client, id, api_key.clone()).await,
                         _ => Ok(id),
                     };
                 }
@@ -105,11 +105,12 @@ struct Content {
     url: String,
 }
 
-async fn get_image_id(client: reqwest::Client, asset_id: u64) -> anyhow::Result<u64> {
-    let url = format!("https://assetdelivery.roblox.com/v1/asset?id={}", asset_id);
+async fn get_image_id(client: reqwest::Client, asset_id: u64, api_key: String) -> anyhow::Result<u64> {
+    let url = format!("https://apis.roblox.com/asset-delivery-api/v1/assetId/{}", asset_id);
 
     let response = client
         .get(url)
+        .header("x-api-key", api_key)
         .send()
         .await
         .context("Failed to get image ID")?;
